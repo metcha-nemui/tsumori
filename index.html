@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>つもり日割り貯金</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome (アイコン用) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Sansom:wght@400;700&display=swap');
+        body {
+            font-family: 'Kiwi Maru', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 pb-12">
+
+    <!-- 初期設定（Firebase Config入力）画面：設定がない場合は強制的に全画面表示 -->
+    <div id="setup-screen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4 hidden overflow-y-auto">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 my-8">
+            <div class="text-center mb-6">
+                <div class="text-5xl mb-3">💰</div>
+                <h2 class="text-2xl font-bold text-slate-800">つもり日割り貯金</h2>
+                <p class="text-xs text-slate-500 mt-1">初期セットアップが必要です</p>
+            </div>
+            
+            <div class="space-y-4 text-xs sm:text-sm text-slate-600">
+                <p>このアプリは自分専用の Firebase データベースと同期して動作します。利用を開始するには、以下の手順で Firebase の設定を登録してください。</p>
+                
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs text-slate-500 space-y-1">
+                    <span class="font-bold text-slate-700 block">📝 セットアップ手順:</span>
+                    <ol class="list-decimal list-inside space-y-1">
+                        <li>Firebase コンソールでプロジェクトを作成</li>
+                        <li>ウェブアプリを追加し、画面に表示される <code class="bg-slate-200 px-1 rounded text-rose-500 font-mono">firebaseConfig</code> のオブジェクト全体をコピー</li>
+                        <li>下のテキストエリアに貼り付けて保存ボタンを押します</li>
+                    </ol>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">firebaseConfig (JSONオブジェクト形式)</label>
+                    <textarea id="setup-config-textarea" rows="8" placeholder='{
+  "apiKey": "AIzaSy...",
+  "authDomain": "...",
+  "projectId": "...",
+  "storageBucket": "...",
+  "messagingSenderId": "...",
+  "appId": "..."
+}' class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea>
+                </div>
+
+                <button id="save-setup-config-btn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 px-4 rounded-xl text-sm transition-colors shadow-lg shadow-emerald-100 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> 設定を保存して開始する
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 設定モーダル画面（アプリ使用中に設定を変更・リセットしたい場合用） -->
+    <div id="settings-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md z-40 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-gear text-slate-500"></i> 同期用 Firebase 設定の変更
+                </h2>
+                <button id="close-settings-btn" class="text-slate-400 hover:text-slate-600 p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4 text-xs sm:text-sm text-slate-600">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">firebaseConfig (JSONオブジェクト形式)</label>
+                    <textarea id="modal-config-textarea" rows="8" class="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"></textarea>
+                </div>
+
+                <div class="flex gap-2">
+                    <button id="save-modal-config-btn" class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-floppy-disk"></i> 変更を保存して再起動
+                    </button>
+                    <button id="clear-config-btn" class="bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 font-bold py-2.5 px-4 rounded-xl text-xs sm:text-sm transition-colors border border-slate-200 flex items-center justify-center gap-1" title="設定を消去して初期化">
+                        <i class="fa-solid fa-trash-can"></i> 初期化
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- メインコンテナ -->
+    <div class="max-w-md mx-auto px-4 py-8">
+        
+        <!-- ヘッダー -->
+        <header class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-emerald-600 flex items-center gap-2">
+                    <span>💰</span> つもり日割り貯金
+                </h1>
+                <p class="text-[10px] text-slate-400">「買ったつもり」で毎日コツコツ日割り貯金</p>
+            </div>
+            
+            <!-- 設定ギアボタン -->
+            <button id="open-settings-btn" class="text-slate-400 hover:text-slate-600 transition-colors p-2 rounded-xl hover:bg-slate-100" title="同期設定を開く">
+                <i class="fa-solid fa-gear text-lg"></i>
+            </button>
+        </header>
+
+        <!-- 総額表示カード -->
+        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-6 text-white shadow-xl shadow-emerald-100 mb-6 relative overflow-hidden">
+            <div class="absolute -right-8 -bottom-8 text-9xl opacity-10">💰</div>
+            <p class="text-sm opacity-90 font-medium">今日までの合計貯金額</p>
+            <div class="flex items-baseline gap-1 mt-2">
+                <span class="text-4xl font-extrabold tracking-tight" id="total-display">0</span>
+                <span class="text-xl font-bold">円</span>
+            </div>
+            <div class="mt-4 pt-4 border-t border-white/20 flex justify-between text-xs opacity-90">
+                <span>進行中の目標: <strong id="active-count">0</strong> 件</span>
+                <span id="current-date-display">今日: ----/--/--</span>
+            </div>
+        </div>
+
+        <!-- 貯金目標の追加フォーム -->
+        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
+            <button id="toggle-form-btn" class="w-full flex justify-between items-center text-sm font-bold text-slate-700 hover:text-emerald-600 transition-colors focus:outline-none">
+                <span class="flex items-center gap-2">
+                    <i class="fa-solid fa-circle-plus text-emerald-500 text-lg"></i> 新しい「つもり貯金」を追加
+                </span>
+                <i id="form-chevron" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+            </button>
+
+            <form id="add-item-form" class="mt-4 space-y-4 hidden transition-all duration-300">
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">消耗品名・目標</label>
+                    <input type="text" id="input-name" placeholder="例: 高級シャンプー、カフェラテ我慢" required
+                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">総額 (円)</label>
+                        <input type="number" id="input-price" placeholder="例: 1400" min="1" required
+                            class="w-full px-2 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">目標日数 (日)</label>
+                        <input type="number" id="input-duration" value="14" min="1" placeholder="例: 14" required
+                            class="w-full px-2 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">開始日</label>
+                        <input type="date" id="input-date" required
+                            class="w-full px-2 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-colors shadow-sm shadow-emerald-100 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i> 登録する（指定期間で日割り）
+                </button>
+            </form>
+        </div>
+
+        <!-- 貯金リストセクション -->
+        <div>
+            <div class="flex justify-between items-center mb-3 px-1">
+                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider">貯金リスト</h2>
+                <span class="text-xs text-slate-400">※各目標日数で満額になります</span>
+            </div>
+            
+            <div id="list-container" class="space-y-3">
+                <!-- ここに動的にアイテムが追加されます -->
+                <div class="text-center py-8 text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
+                    <i class="fa-solid fa-piggy-bank text-3xl mb-2 text-slate-300 block"></i>
+                    登録されたつもり貯金はありません。
+                </div>
+            </div>
+        </div>
+
+        <!-- データモードの表示 -->
+        <div class="text-center mt-8">
+            <span id="data-mode-badge" class="inline-block text-[10px] px-2 py-1 bg-emerald-100 text-emerald-600 rounded-full font-medium cursor-pointer" id="badge-trigger">
+                保存先: クラウド同期
+            </span>
+        </div>
+
+    </div>
+
+    <!-- Firebase SDKの読み込み -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // アプリID（データベース構造のプレフィックスとして利用）
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'tsumori-div-savings';
+
+        // ローカルストレージに保存されたカスタムConfigのみを使用する（デフォルト自動注入は完全に除外）
+        const customConfigStr = localStorage.getItem('tsumori_app_firebase_config');
+        let firebaseConfig = null;
+
+        if (customConfigStr) {
+            try {
+                firebaseConfig = JSON.parse(customConfigStr);
+            } catch (e) {
+                console.error("保存されたFirebase Configの解析に失敗しました:", e);
+                localStorage.removeItem('tsumori_app_firebase_config');
+            }
+        }
+
+        let db = null;
+        let auth = null;
+        let currentUser = null;
+        let firestoreUnsubscribe = null;
+
+        // 初期化処理
+        async function init() {
+            const today = new Date();
+            document.getElementById('current-date-display').innerText = `今日: ${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
+            document.getElementById('input-date').value = today.toISOString().split('T')[0];
+
+            // UIコントロールイベント
+            const toggleBtn = document.getElementById('toggle-form-btn');
+            const form = document.getElementById('add-item-form');
+            const chevron = document.getElementById('form-chevron');
+            toggleBtn.addEventListener('click', () => {
+                form.classList.toggle('hidden');
+                chevron.classList.toggle('rotate-180');
+            });
+
+            document.getElementById('add-item-form').addEventListener('submit', handleAddSubmit);
+
+            // モーダルとセットアップ画面のコントロール要素
+            const setupScreen = document.getElementById('setup-screen');
+            const settingsModal = document.getElementById('settings-modal');
+            const setupConfigTextarea = document.getElementById('setup-config-textarea');
+            const modalConfigTextarea = document.getElementById('modal-config-textarea');
+
+            // 1. Configがない場合は、強制的にセットアップ画面を表示して処理を止める
+            if (!firebaseConfig || !firebaseConfig.apiKey) {
+                setupScreen.classList.remove('hidden');
+                
+                document.getElementById('save-setup-config-btn').addEventListener('click', () => {
+                    const value = setupConfigTextarea.value.trim();
+                    saveConfigAndReload(value);
+                });
+                return; // 接続情報がないため初期化処理を中断
+            }
+
+            // --- 接続情報がある場合の処理 ---
+            
+            // アプリ内設定ギアボタンの挙動設定
+            document.getElementById('open-settings-btn').addEventListener('click', () => {
+                modalConfigTextarea.value = JSON.stringify(firebaseConfig, null, 2);
+                settingsModal.classList.remove('hidden');
+            });
+
+            document.getElementById('close-settings-btn').addEventListener('click', () => {
+                settingsModal.classList.add('hidden');
+            });
+
+            // 設定画面（モーダル内）での保存処理
+            document.getElementById('save-modal-config-btn').addEventListener('click', () => {
+                const value = modalConfigTextarea.value.trim();
+                saveConfigAndReload(value);
+            });
+
+            // 設定画面（モーダル内）での初期化（リセット）処理
+            document.getElementById('clear-config-btn').addEventListener('click', () => {
+                if (confirm("Firebaseの設定をクリアしますか？アプリを使用するには再セットアップが必要になります。")) {
+                    localStorage.removeItem('tsumori_app_firebase_config');
+                    alert("設定をクリアしました。初期設定画面に戻るため再起動します。");
+                    location.reload();
+                }
+            });
+
+            // Firebaseの接続テストと初期化・匿名ログインの実行
+            try {
+                const app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                // RULE 3 に基づき、クエリ開始前に必ず認証を実行する
+                const initAuth = async () => {
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                };
+
+                await initAuth();
+
+                // 認証成功後のトリガー
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        subscribeToSavings();
+                    } else {
+                        showCriticalError("認証に失敗しました。認証サービスが有効か確認してください。");
+                    }
+                });
+            } catch (error) {
+                console.error("Firebase初期化エラー:", error);
+                showCriticalError("Firebaseの初期化に失敗しました。ConfigのJSON記述が正しいか確認してください。");
+            }
+        }
+
+        // 設定の保存とリロード
+        function saveConfigAndReload(configJsonStr) {
+            if (!configJsonStr) {
+                alert("設定値が空です。");
+                return;
+            }
+            try {
+                // 正しいJSON形式かチェック
+                JSON.parse(configJsonStr);
+                localStorage.setItem('tsumori_app_firebase_config', configJsonStr);
+                alert("Firebase設定を保存しました。反映のため自動でリロードします。");
+                location.reload();
+            } catch (e) {
+                alert("エラー: 入力された値は正しいJSON形式ではありません。もう一度確認してください。");
+            }
+        }
+
+        // 重大エラー表示
+        function showCriticalError(msg) {
+            document.getElementById('list-container').innerHTML = `
+                <div class="text-center py-8 text-rose-500 text-sm bg-rose-50 rounded-2xl border border-dashed border-rose-200 p-4">
+                    <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 block"></i>
+                    ${msg}<br>
+                    <span class="text-xs text-slate-400 block mt-2">右上の設定（⚙️）からConfigを再登録、または初期化できます。</span>
+                </div>
+            `;
+        }
+
+        // データのリアルタイム購読 (Firebase)
+        function subscribeToSavings() {
+            if (!db || !currentUser) return;
+            // RULE 1に適合したパス設計 (パブリックパスとして利用)
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'savings');
+            
+            firestoreUnsubscribe = onSnapshot(colRef, (snapshot) => {
+                const items = [];
+                snapshot.forEach((doc) => {
+                    items.push({ id: doc.id, ...doc.data() });
+                });
+                renderList(items);
+            }, (error) => {
+                console.error("データ購読エラー:", error);
+                showCriticalError("データベースからの読込に失敗しました。Firestoreのセキュリティルール（Rules）でパブリックアクセスかつ認証ユーザーの読み書きが許可されているか確認してください。");
+            });
+        }
+
+        // 登録送信ハンドラ
+        async function handleAddSubmit(e) {
+            e.preventDefault();
+            const nameInput = document.getElementById('input-name');
+            const priceInput = document.getElementById('input-price');
+            const durationInput = document.getElementById('input-duration');
+            const dateInput = document.getElementById('input-date');
+
+            const newItem = {
+                name: nameInput.value.trim(),
+                price: parseInt(priceInput.value, 10),
+                duration: parseInt(durationInput.value, 10) || 14,
+                startDate: dateInput.value
+            };
+
+            if (db && currentUser) {
+                try {
+                    const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'savings');
+                    await addDoc(colRef, newItem);
+                } catch (err) {
+                    console.error("クラウド保存エラー:", err);
+                    alert("クラウドへの保存に失敗しました。セキュリティルールを確認してください。");
+                }
+            }
+
+            // フォームリセット
+            nameInput.value = '';
+            priceInput.value = '';
+            durationInput.value = '14';
+            dateInput.value = new Date().toISOString().split('T')[0];
+            document.getElementById('add-item-form').classList.add('hidden');
+            document.getElementById('form-chevron').classList.remove('rotate-180');
+        }
+
+        // 削除ハンドラ
+        window.deleteItem = async function(id) {
+            if (db && currentUser) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'savings', id);
+                    await deleteDoc(docRef);
+                } catch (err) {
+                    console.error("クラウド削除エラー:", err);
+                    alert("クラウドからの削除に失敗しました。");
+                }
+            }
+        };
+
+        // 描画および計算メイン処理
+        function renderList(itemsArray) {
+            const container = document.getElementById('list-container');
+            const totalDisplay = document.getElementById('total-display');
+            const activeCountDisplay = document.getElementById('active-count');
+
+            if (itemsArray.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
+                        <i class="fa-solid fa-piggy-bank text-3xl mb-2 text-slate-300 block"></i>
+                        登録されたつもり貯金はありません。<br>上のフォームから追加してみましょう！
+                    </div>
+                `;
+                totalDisplay.innerText = "0";
+                activeCountDisplay.innerText = "0";
+                return;
+            }
+
+            const today = new Date();
+            today.setHours(0,0,0,0);
+
+            let totalSavings = 0;
+            let listHtml = '';
+
+            itemsArray.forEach(item => {
+                const start = new Date(item.startDate);
+                start.setHours(0,0,0,0);
+
+                const diffTime = today - start;
+                const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                const duration = parseInt(item.duration, 10) || 14;
+                const activeDays = Math.min(duration, Math.max(0, diffDays));
+                
+                const dailyRate = item.price / duration;
+                const currentSaving = Math.floor(dailyRate * activeDays);
+                totalSavings += currentSaving;
+
+                const percent = Math.min(100, Math.max(0, (activeDays / duration) * 100));
+                const isCompleted = activeDays >= duration;
+
+                listHtml += `
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 transition-all hover:shadow-md relative overflow-hidden group">
+                        ${isCompleted ? '<div class="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">満額達成🎉</div>' : ''}
+                        
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <h3 class="font-bold text-slate-800 text-base">${escapeHTML(item.name)}</h3>
+                                <p class="text-[11px] text-slate-400 mt-0.5">開始日: ${item.startDate}（目標期間: ${duration}日間）</p>
+                            </div>
+                            <button onclick="deleteItem('${item.id}')" class="text-slate-300 hover:text-rose-500 p-1 rounded-lg hover:bg-rose-50 transition-colors" title="削除">
+                                <i class="fa-solid fa-trash-can text-sm"></i>
+                            </button>
+                        </div>
+
+                        <div class="flex justify-between items-baseline text-xs text-slate-600 mb-2">
+                            <div>
+                                <span class="text-emerald-600 font-bold text-sm">${currentSaving.toLocaleString()}</span> / ${item.price.toLocaleString()} 円
+                            </div>
+                            <div class="text-[11px] text-slate-500">
+                                <span>${activeDays}日目 / ${duration}日</span>
+                                <span class="mx-1 text-slate-300">|</span>
+                                <span>1日 ${Math.floor(dailyRate).toLocaleString()}円</span>
+                            </div>
+                        </div>
+
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-500 ease-out ${isCompleted ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-emerald-400 to-teal-500'}" 
+                                 style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = listHtml;
+            totalDisplay.innerText = totalSavings.toLocaleString();
+            activeCountDisplay.innerText = itemsArray.length;
+        }
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
+
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
