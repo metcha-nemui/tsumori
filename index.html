@@ -10,7 +10,7 @@
     <!-- Font Awesome (アイコン用) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&family=Sansom:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Kiwi+Maru:wght@400;500&display=swap');
         body {
             font-family: 'Kiwi Maru', sans-serif;
         }
@@ -18,7 +18,7 @@
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800 pb-12">
 
-    <!-- 初期設定（Firebase Config入力）画面：設定がない場合は強制的に全画面表示 -->
+    <!-- 初期設定（Firebase Config入力）画面 -->
     <div id="setup-screen" class="fixed inset-0 bg-slate-900 z-50 flex items-center justify-center p-4 hidden overflow-y-auto">
         <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl border border-slate-100 my-8">
             <div class="text-center mb-6">
@@ -58,7 +58,7 @@
         </div>
     </div>
 
-    <!-- 設定モーダル画面（アプリ使用中に設定を変更・リセットしたい場合用） -->
+    <!-- 設定モーダル画面 -->
     <div id="settings-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-md z-40 flex items-center justify-center p-4 hidden">
         <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
@@ -89,15 +89,15 @@
     </div>
 
     <!-- メインコンテナ -->
-    <div class="max-w-md mx-auto px-4 py-8">
+    <div class="max-w-md mx-auto px-4 py-6">
         
         <!-- ヘッダー -->
-        <header class="flex justify-between items-center mb-6">
+        <header class="flex justify-between items-center mb-4">
             <div>
                 <h1 class="text-2xl font-bold text-emerald-600 flex items-center gap-2">
                     <span>💰</span> つもり日割り貯金
                 </h1>
-                <p class="text-[10px] text-slate-400">「買ったつもり」で毎日コツコツ日割り貯金</p>
+                <p class="text-[10px] text-slate-400">「買ったつもり」で毎日コツコツ日割り貯金＆スマートに使う</p>
             </div>
             
             <!-- 設定ギアボタン -->
@@ -106,77 +106,153 @@
             </button>
         </header>
 
-        <!-- 総額表示カード -->
-        <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-6 text-white shadow-xl shadow-emerald-100 mb-6 relative overflow-hidden">
-            <div class="absolute -right-8 -bottom-8 text-9xl opacity-10">💰</div>
-            <p class="text-sm opacity-90 font-medium">今日までの合計貯金額</p>
-            <div class="flex items-baseline gap-1 mt-2">
-                <span class="text-4xl font-extrabold tracking-tight" id="total-display">0</span>
-                <span class="text-xl font-bold">円</span>
-            </div>
-            <div class="mt-4 pt-4 border-t border-white/20 flex justify-between text-xs opacity-90">
-                <span>進行中の目標: <strong id="active-count">0</strong> 件</span>
-                <span id="current-date-display">今日: ----/--/--</span>
-            </div>
-        </div>
-
-        <!-- 貯金目標の追加フォーム -->
-        <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
-            <button id="toggle-form-btn" class="w-full flex justify-between items-center text-sm font-bold text-slate-700 hover:text-emerald-600 transition-colors focus:outline-none">
-                <span class="flex items-center gap-2">
-                    <i class="fa-solid fa-circle-plus text-emerald-500 text-lg"></i> 新しい「つもり貯金」を追加
-                </span>
-                <i id="form-chevron" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+        <!-- タブナビゲーション -->
+        <div class="flex bg-slate-200/60 p-1 rounded-2xl mb-5">
+            <button id="tab-save" class="flex-1 text-center py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 bg-white text-emerald-600 shadow-sm">
+                <i class="fa-solid fa-piggy-bank"></i> 貯める
             </button>
-
-            <form id="add-item-form" class="mt-4 space-y-4 hidden transition-all duration-300">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">消耗品名・目標</label>
-                    <input type="text" id="input-name" placeholder="例: 外食、イベント、サブスク" required
-                        class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
-                </div>
-                <div class="grid grid-cols-3 gap-2">
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">総額 (円)</label>
-                        <input type="number" id="input-price" placeholder="例: 1400" min="1" required
-                            class="w-full px-2 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">目標日数 (日)</label>
-                        <input type="number" id="input-duration" value="1" min="1" placeholder="例: 14" required
-                            class="w-full px-2 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-slate-500 mb-1">開始日</label>
-                        <input type="date" id="input-date" required
-                            class="w-full px-2 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm">
-                    </div>
-                </div>
-                <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-colors shadow-sm shadow-emerald-100 flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-check"></i> 登録する（指定期間で日割り）
-                </button>
-            </form>
+            <button id="tab-wallet" class="flex-1 text-center py-2.5 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 text-slate-500 hover:text-slate-800">
+                <i class="fa-solid fa-wallet"></i> 使う（ウォレット）
+            </button>
         </div>
 
-        <!-- 貯金リストセクション -->
-        <div>
-            <div class="flex justify-between items-center mb-3 px-1">
-                <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider">貯金リスト</h2>
-                <span class="text-xs text-slate-400">※各目標日数で満額になります</span>
+        <!-- ==================== 1. 貯める画面 ==================== -->
+        <div id="view-save">
+            <!-- 総額表示カード -->
+            <div class="bg-gradient-to-br from-emerald-500 to-teal-600 rounded-3xl p-6 text-white shadow-xl shadow-emerald-100 mb-6 relative overflow-hidden">
+                <div class="absolute -right-8 -bottom-8 text-9xl opacity-10">💰</div>
+                <p class="text-sm opacity-90 font-medium">今日までの合計貯金額</p>
+                <div class="flex items-baseline gap-1 mt-2">
+                    <span class="text-4xl font-extrabold tracking-tight" id="total-display">0</span>
+                    <span class="text-xl font-bold">円</span>
+                </div>
+                <div class="mt-4 pt-4 border-t border-white/20 flex justify-between text-xs opacity-90">
+                    <span>進行中の目標: <strong id="active-count">0</strong> 件</span>
+                    <span id="current-date-display">今日: ----/--/--</span>
+                </div>
             </div>
-            
-            <div id="list-container" class="space-y-3">
-                <!-- ここに動的にアイテムが追加されます -->
-                <div class="text-center py-8 text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
-                    <i class="fa-solid fa-piggy-bank text-3xl mb-2 text-slate-300 block"></i>
-                    登録されたつもり貯金はありません。
+
+            <!-- 貯金目標の追加フォーム -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
+                <button id="toggle-form-btn" class="w-full flex justify-between items-center text-sm font-bold text-slate-700 hover:text-emerald-600 transition-colors focus:outline-none">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-circle-plus text-emerald-500 text-lg"></i> 新しい「つもり貯金」を追加
+                    </span>
+                    <i id="form-chevron" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                </button>
+
+                <form id="add-item-form" class="mt-4 space-y-4 hidden transition-all duration-300">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">消耗品名・目標</label>
+                        <input type="text" id="input-name" placeholder="例: 外食、イベント、サブスク" required
+                            class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">総額 (円)</label>
+                            <input type="number" id="input-price" placeholder="例: 1400" min="1" required
+                                class="w-full px-2 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">目標日数 (日)</label>
+                            <input type="number" id="input-duration" value="1" min="1" placeholder="例: 14" required
+                                class="w-full px-2 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">開始日</label>
+                            <input type="date" id="input-date" required
+                                class="w-full px-2 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-xs sm:text-sm">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-colors shadow-sm shadow-emerald-100 flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-check"></i> 登録する（指定期間で日割り）
+                    </button>
+                </form>
+            </div>
+
+            <!-- 貯金リストセクション -->
+            <div>
+                <div class="flex justify-between items-center mb-3 px-1">
+                    <h2 class="text-sm font-bold text-slate-500 uppercase tracking-wider">貯金リスト</h2>
+                    <span class="text-xs text-slate-400">※各目標日数で満額になります</span>
+                </div>
+                
+                <div id="list-container" class="space-y-3">
+                    <!-- ここに動的にアイテムが追加されます -->
+                    <div class="text-center py-8 text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
+                        <i class="fa-solid fa-piggy-bank text-3xl mb-2 text-slate-300 block"></i>
+                        登録されたつもり貯金はありません。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== 2. ウォレット（使う）画面 ==================== -->
+        <div id="view-wallet" class="hidden">
+            <!-- ウォレット残高カード -->
+            <div id="wallet-card" class="bg-white rounded-3xl p-6 shadow-md border border-slate-100 mb-6 text-center relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 text-8xl opacity-5 text-slate-400">👛</div>
+                <p class="text-xs text-slate-500 font-bold uppercase tracking-wider mb-1">現在のウォレット残高 (自由資金)</p>
+                <div class="flex items-baseline justify-center gap-1 my-3">
+                    <span class="text-4xl font-extrabold tracking-tight" id="wallet-balance-display">0</span>
+                    <span class="text-lg font-bold text-slate-600">円</span>
+                </div>
+                <div id="wallet-status-msg" class="text-xs text-emerald-600 bg-emerald-50 py-1.5 px-3 rounded-full inline-block font-medium">
+                    <i class="fa-solid fa-circle-check"></i> 達成した資金がここにたまります
+                </div>
+            </div>
+
+            <!-- 支出を記録（買ったもの） -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 mb-6">
+                <button id="toggle-expense-form-btn" class="w-full flex justify-between items-center text-sm font-bold text-slate-700 hover:text-emerald-600 transition-colors focus:outline-none">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-cart-shopping text-rose-500 text-lg"></i> 実際に買ったものを記録（支出）
+                    </span>
+                    <i id="expense-form-chevron" class="fa-solid fa-chevron-down transition-transform duration-300"></i>
+                </button>
+
+                <form id="add-expense-form" class="mt-4 space-y-4 hidden transition-all duration-300">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">買ったモノ・支払ったコト</label>
+                        <input type="text" id="expense-name" placeholder="例: お菓子、漫画、サービス" required
+                            class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">支払金額 (円)</label>
+                            <input type="number" id="expense-price" placeholder="例: 500" min="1" required
+                                class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-500 mb-1">購入日</label>
+                            <input type="date" id="expense-date" required
+                                class="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-rose-500 hover:bg-rose-600 text-white font-bold py-2.5 px-4 rounded-xl text-sm transition-colors shadow-sm flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-minus"></i> 支出を記録してウォレットから引く
+                    </button>
+                </form>
+            </div>
+
+            <!-- 支出＆移動履歴 -->
+            <div>
+                <h3 class="text-sm font-bold text-slate-500 mb-3 px-1 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fa-solid fa-history text-slate-400"></i> ウォレット履歴
+                </h3>
+                <div id="history-container" class="space-y-3">
+                    <!-- ここに動的に履歴が表示されます -->
+                    <div class="text-center py-8 text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
+                        <i class="fa-solid fa-clipboard-list text-3xl mb-2 text-slate-300 block"></i>
+                        ウォレットへの入出金履歴はありません。
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- データモードの表示 -->
         <div class="text-center mt-8">
-            <span id="data-mode-badge" class="inline-block text-[10px] px-2 py-1 bg-emerald-100 text-emerald-600 rounded-full font-medium cursor-pointer" id="badge-trigger">
+            <span id="data-mode-badge" class="inline-block text-[10px] px-2 py-1 bg-emerald-100 text-emerald-600 rounded-full font-medium">
                 保存先: クラウド同期
             </span>
         </div>
@@ -187,12 +263,12 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc, addDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // アプリID（データベース構造のプレフィックスとして利用）
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'tsumori-div-savings';
 
-        // ローカルストレージに保存されたカスタムConfigのみを使用する（デフォルト自動注入は完全に除外）
+        // ローカルストレージに保存されたカスタムConfigを使用
         const customConfigStr = localStorage.getItem('tsumori_app_firebase_config');
         let firebaseConfig = null;
 
@@ -208,15 +284,48 @@
         let db = null;
         let auth = null;
         let currentUser = null;
-        let firestoreUnsubscribe = null;
+        
+        let savingsUnsubscribe = null;
+        let walletUnsubscribe = null;
+        let expensesUnsubscribe = null;
+
+        // グローバルデータキャッシュ
+        let currentSavings = [];
+        let currentWallet = { balance: 0 };
+        let currentExpenses = [];
 
         // 初期化処理
         async function init() {
             const today = new Date();
             document.getElementById('current-date-display').innerText = `今日: ${today.getFullYear()}/${String(today.getMonth() + 1).padStart(2, '0')}/${String(today.getDate()).padStart(2, '0')}`;
             document.getElementById('input-date').value = today.toISOString().split('T')[0];
+            document.getElementById('expense-date').value = today.toISOString().split('T')[0];
 
-            // UIコントロールイベント
+            // UIコントロールイベント（タブ切り替え）
+            const tabSave = document.getElementById('tab-save');
+            const tabWallet = document.getElementById('tab-wallet');
+            const viewSave = document.getElementById('view-save');
+            const viewWallet = document.getElementById('view-wallet');
+
+            tabSave.addEventListener('click', () => {
+                tabSave.classList.add('bg-white', 'text-emerald-600', 'shadow-sm');
+                tabSave.classList.remove('text-slate-500', 'hover:text-slate-800');
+                tabWallet.classList.remove('bg-white', 'text-emerald-600', 'shadow-sm');
+                tabWallet.classList.add('text-slate-500', 'hover:text-slate-800');
+                viewSave.classList.remove('hidden');
+                viewWallet.classList.add('hidden');
+            });
+
+            tabWallet.addEventListener('click', () => {
+                tabWallet.classList.add('bg-white', 'text-emerald-600', 'shadow-sm');
+                tabWallet.classList.remove('text-slate-500', 'hover:text-slate-800');
+                tabSave.classList.remove('bg-white', 'text-emerald-600', 'shadow-sm');
+                tabSave.classList.add('text-slate-500', 'hover:text-slate-800');
+                viewWallet.classList.remove('hidden');
+                viewSave.classList.add('hidden');
+            });
+
+            // 新しい「つもり貯金」を追加フォーム切り替え
             const toggleBtn = document.getElementById('toggle-form-btn');
             const form = document.getElementById('add-item-form');
             const chevron = document.getElementById('form-chevron');
@@ -225,15 +334,25 @@
                 chevron.classList.toggle('rotate-180');
             });
 
-            document.getElementById('add-item-form').addEventListener('submit', handleAddSubmit);
+            // 支出フォーム切り替え
+            const toggleExpenseBtn = document.getElementById('toggle-expense-form-btn');
+            const expenseForm = document.getElementById('add-expense-form');
+            const expenseChevron = document.getElementById('expense-form-chevron');
+            toggleExpenseBtn.addEventListener('click', () => {
+                expenseForm.classList.toggle('hidden');
+                expenseChevron.classList.toggle('rotate-180');
+            });
 
-            // モーダルとセットアップ画面のコントロール要素
+            document.getElementById('add-item-form').addEventListener('submit', handleAddSubmit);
+            document.getElementById('add-expense-form').addEventListener('submit', handleAddExpenseSubmit);
+
+            // モーダルとセットアップ画面
             const setupScreen = document.getElementById('setup-screen');
             const settingsModal = document.getElementById('settings-modal');
             const setupConfigTextarea = document.getElementById('setup-config-textarea');
             const modalConfigTextarea = document.getElementById('modal-config-textarea');
 
-            // 1. Configがない場合は、強制的にセットアップ画面を表示して処理を止める
+            // 1. Configがない場合はセットアップ画面を表示
             if (!firebaseConfig || !firebaseConfig.apiKey) {
                 setupScreen.classList.remove('hidden');
                 
@@ -241,12 +360,10 @@
                     const value = setupConfigTextarea.value.trim();
                     saveConfigAndReload(value);
                 });
-                return; // 接続情報がないため初期化処理を中断
+                return;
             }
 
-            // --- 接続情報がある場合の処理 ---
-            
-            // アプリ内設定ギアボタンの挙動設定
+            // --- 設定ボタン挙動設定 ---
             document.getElementById('open-settings-btn').addEventListener('click', () => {
                 modalConfigTextarea.value = JSON.stringify(firebaseConfig, null, 2);
                 settingsModal.classList.remove('hidden');
@@ -256,22 +373,19 @@
                 settingsModal.classList.add('hidden');
             });
 
-            // 設定画面（モーダル内）での保存処理
             document.getElementById('save-modal-config-btn').addEventListener('click', () => {
                 const value = modalConfigTextarea.value.trim();
                 saveConfigAndReload(value);
             });
 
-            // 設定画面（モーダル内）での初期化（リセット）処理
             document.getElementById('clear-config-btn').addEventListener('click', () => {
                 if (confirm("Firebaseの設定をクリアしますか？アプリを使用するには再セットアップが必要になります。")) {
                     localStorage.removeItem('tsumori_app_firebase_config');
-                    alert("設定をクリアしました。初期設定画面に戻るため再起動します。");
                     location.reload();
                 }
             });
 
-            // Firebaseの接続テストと初期化・匿名ログインの実行
+            // Firebaseの初期化・匿名ログインの実行
             try {
                 const app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
@@ -292,7 +406,7 @@
                 onAuthStateChanged(auth, (user) => {
                     if (user) {
                         currentUser = user;
-                        subscribeToSavings();
+                        subscribeToData();
                     } else {
                         showCriticalError("認証に失敗しました。認証サービスが有効か確認してください。");
                     }
@@ -310,46 +424,74 @@
                 return;
             }
             try {
-                // 正しいJSON形式かチェック
                 JSON.parse(configJsonStr);
                 localStorage.setItem('tsumori_app_firebase_config', configJsonStr);
-                alert("Firebase設定を保存しました。反映のため自動でリロードします。");
+                alert("Firebase設定を保存しました。リロードします。");
                 location.reload();
             } catch (e) {
-                alert("エラー: 入力された値は正しいJSON形式ではありません。もう一度確認してください。");
+                alert("エラー: 入力された値は正しいJSON形式ではありません。");
             }
         }
 
         // 重大エラー表示
         function showCriticalError(msg) {
-            document.getElementById('list-container').innerHTML = `
+            const errHtml = `
                 <div class="text-center py-8 text-rose-500 text-sm bg-rose-50 rounded-2xl border border-dashed border-rose-200 p-4">
                     <i class="fa-solid fa-triangle-exclamation text-3xl mb-2 block"></i>
                     ${msg}<br>
-                    <span class="text-xs text-slate-400 block mt-2">右上の設定（⚙️）からConfigを再登録、または初期化できます。</span>
+                    <span class="text-xs text-slate-400 block mt-2">右上の設定（⚙️）からConfigを再登録できます。</span>
                 </div>
             `;
+            document.getElementById('list-container').innerHTML = errHtml;
+            document.getElementById('history-container').innerHTML = errHtml;
         }
 
-        // データのリアルタイム購読 (Firebase)
-        function subscribeToSavings() {
+        // データのリアルタイム購読
+        function subscribeToData() {
             if (!db || !currentUser) return;
-            // RULE 1に適合したパス設計 (パブリックパスとして利用)
-            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'savings');
-            
-            firestoreUnsubscribe = onSnapshot(colRef, (snapshot) => {
-                const items = [];
+
+            // 1. つもり貯金リスト (savings)
+            const savingsRef = collection(db, 'artifacts', appId, 'public', 'data', 'savings');
+            savingsUnsubscribe = onSnapshot(savingsRef, (snapshot) => {
+                currentSavings = [];
                 snapshot.forEach((doc) => {
-                    items.push({ id: doc.id, ...doc.data() });
+                    currentSavings.push({ id: doc.id, ...doc.data() });
                 });
-                renderList(items);
+                renderSavings();
             }, (error) => {
-                console.error("データ購読エラー:", error);
-                showCriticalError("データベースからの読込に失敗しました。Firestoreのセキュリティルール（Rules）でパブリックアクセスかつ認証ユーザーの読み書きが許可されているか確認してください。");
+                console.error("貯金リスト購読エラー:", error);
+                showCriticalError("データベース接続エラー。セキュリティルールを確認してください。");
+            });
+
+            // 2. ウォレット残高 (wallet/summary)
+            const walletDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'wallet', 'summary');
+            walletUnsubscribe = onSnapshot(walletDocRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    currentWallet = docSnap.data();
+                } else {
+                    currentWallet = { balance: 0 };
+                    // 初期値の作成
+                    setDoc(walletDocRef, { balance: 0 }).catch(err => console.error("ウォレット作成エラー:", err));
+                }
+                renderWallet();
+            }, (error) => {
+                console.error("ウォレット購読エラー:", error);
+            });
+
+            // 3. 支出履歴 (expenses)
+            const expensesRef = collection(db, 'artifacts', appId, 'public', 'data', 'expenses');
+            expensesUnsubscribe = onSnapshot(expensesRef, (snapshot) => {
+                currentExpenses = [];
+                snapshot.forEach((doc) => {
+                    currentExpenses.push({ id: doc.id, ...doc.data() });
+                });
+                renderWalletHistory();
+            }, (error) => {
+                console.error("支出履歴購読エラー:", error);
             });
         }
 
-        // 登録送信ハンドラ
+        // つもり貯金：新規登録
         async function handleAddSubmit(e) {
             e.preventDefault();
             const nameInput = document.getElementById('input-name');
@@ -370,7 +512,7 @@
                     await addDoc(colRef, newItem);
                 } catch (err) {
                     console.error("クラウド保存エラー:", err);
-                    alert("クラウドへの保存に失敗しました。セキュリティルールを確認してください。");
+                    alert("クラウドへの保存に失敗しました。");
                 }
             }
 
@@ -383,26 +525,120 @@
             document.getElementById('form-chevron').classList.remove('rotate-180');
         }
 
-        // 削除ハンドラ
+        // 実際に買ったもの（支出）の登録
+        async function handleAddExpenseSubmit(e) {
+            e.preventDefault();
+            const expenseNameInput = document.getElementById('expense-name');
+            const expensePriceInput = document.getElementById('expense-price');
+            const expenseDateInput = document.getElementById('expense-date');
+
+            const priceVal = parseInt(expensePriceInput.value, 10);
+            const newExpense = {
+                type: 'expense',
+                name: expenseNameInput.value.trim(),
+                price: priceVal,
+                date: expenseDateInput.value
+            };
+
+            if (db && currentUser) {
+                try {
+                    // 1. 支出データを保存
+                    const expRef = collection(db, 'artifacts', appId, 'public', 'data', 'expenses');
+                    await addDoc(expRef, newExpense);
+
+                    // 2. ウォレット残高を更新 (引き算)
+                    const walletDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'wallet', 'summary');
+                    const newBalance = (currentWallet.balance || 0) - priceVal;
+                    await updateDoc(walletDocRef, { balance: newBalance });
+                } catch (err) {
+                    console.error("支出登録エラー:", err);
+                    alert("支出の記録に失敗しました。");
+                }
+            }
+
+            // フォームリセット
+            expenseNameInput.value = '';
+            expensePriceInput.value = '';
+            expenseDateInput.value = new Date().toISOString().split('T')[0];
+            document.getElementById('add-expense-form').classList.add('hidden');
+            document.getElementById('expense-form-chevron').classList.remove('rotate-180');
+        }
+
+        // 貯金項目の通常削除
         window.deleteItem = async function(id) {
+            if (!confirm("このつもり貯金目標を削除しますか？")) return;
             if (db && currentUser) {
                 try {
                     const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'savings', id);
                     await deleteDoc(docRef);
                 } catch (err) {
-                    console.error("クラウド削除エラー:", err);
-                    alert("クラウドからの削除に失敗しました。");
+                    console.error("削除エラー:", err);
                 }
             }
         };
 
-        // 描画および計算メイン処理
-        function renderList(itemsArray) {
+        // 貯金項目：満額達成時のウォレットへの移動
+        window.moveToWallet = async function(id, totalValue, name) {
+            if (!db || !currentUser) return;
+            try {
+                // 1. ウォレット残高の更新 (総額を加算)
+                const walletDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'wallet', 'summary');
+                const newBalance = (currentWallet.balance || 0) + totalValue;
+                await updateDoc(walletDocRef, { balance: newBalance });
+
+                // 2. 移動履歴の登録
+                const expRef = collection(db, 'artifacts', appId, 'public', 'data', 'expenses');
+                await addDoc(expRef, {
+                    type: 'transfer',
+                    name: `つもり貯金「${name}」達成`,
+                    price: totalValue,
+                    date: new Date().toISOString().split('T')[0]
+                });
+
+                // 3. 元データの削除
+                const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'savings', id);
+                await deleteDoc(docRef);
+
+                // フィードバック表示（通知トーストなどがないためアラート風に）
+                const toast = document.createElement('div');
+                toast.className = "fixed bottom-5 left-1/2 -translate-x-1/2 bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-xl text-xs z-50 flex items-center gap-2 animate-bounce";
+                toast.innerHTML = `<i class="fa-solid fa-wand-magic-sparkles text-amber-400"></i> ウォレットに ${totalValue.toLocaleString()}円 を追加しました！`;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+
+            } catch (err) {
+                console.error("ウォレット移動エラー:", err);
+                alert("ウォレットへの移動処理に失敗しました。");
+            }
+        };
+
+        // 履歴項目の削除（ウォレット残高を調整した上で削除）
+        window.deleteHistoryItem = async function(id, price, type) {
+            if (!confirm("この履歴データを削除しますか？（ウォレット残高も連動して再計算されます）")) return;
+            if (db && currentUser) {
+                try {
+                    // 残高調整：支出を消した場合は残高プラス、移行を消した場合は残高マイナス
+                    const balanceDiff = type === 'expense' ? price : -price;
+                    const walletDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'wallet', 'summary');
+                    const newBalance = (currentWallet.balance || 0) + balanceDiff;
+
+                    await updateDoc(walletDocRef, { balance: newBalance });
+                    
+                    const expDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'expenses', id);
+                    await deleteDoc(expDocRef);
+                } catch (err) {
+                    console.error("履歴削除エラー:", err);
+                }
+            }
+        };
+
+        // 貯金リストの描画
+        function renderSavings() {
             const container = document.getElementById('list-container');
             const totalDisplay = document.getElementById('total-display');
             const activeCountDisplay = document.getElementById('active-count');
 
-            if (itemsArray.length === 0) {
+            if (currentSavings.length === 0) {
                 container.innerHTML = `
                     <div class="text-center py-8 text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
                         <i class="fa-solid fa-piggy-bank text-3xl mb-2 text-slate-300 block"></i>
@@ -420,7 +656,7 @@
             let totalSavings = 0;
             let listHtml = '';
 
-            itemsArray.forEach(item => {
+            currentSavings.forEach(item => {
                 const start = new Date(item.startDate);
                 start.setHours(0,0,0,0);
 
@@ -438,7 +674,7 @@
 
                 listHtml += `
                     <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 transition-all hover:shadow-md relative overflow-hidden group">
-                        ${isCompleted ? '<div class="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-bl-lg">満額達成🎉</div>' : ''}
+                        ${isCompleted ? '<div class="absolute top-0 right-0 bg-amber-500 text-white text-[10px] font-bold px-2.5 py-0.5 rounded-bl-lg">満額達成🎉</div>' : ''}
                         
                         <div class="flex justify-between items-start mb-2">
                             <div>
@@ -461,17 +697,103 @@
                             </div>
                         </div>
 
-                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden mb-3">
                             <div class="h-full rounded-full transition-all duration-500 ease-out ${isCompleted ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-emerald-400 to-teal-500'}" 
                                  style="width: ${percent}%"></div>
                         </div>
+
+                        ${isCompleted ? `
+                        <div class="pt-2 border-t border-slate-100 flex justify-end">
+                            <button onclick="moveToWallet('${item.id}', ${item.price}, '${escapeHTML(item.name)}')" class="bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-1.5 px-3 rounded-xl transition-all shadow-sm flex items-center gap-1">
+                                <i class="fa-solid fa-arrow-right-to-bracket"></i> ウォレットに移動する (${item.price.toLocaleString()}円)
+                            </button>
+                        </div>
+                        ` : ''}
                     </div>
                 `;
             });
 
             container.innerHTML = listHtml;
             totalDisplay.innerText = totalSavings.toLocaleString();
-            activeCountDisplay.innerText = itemsArray.length;
+            activeCountDisplay.innerText = currentSavings.length;
+        }
+
+        // ウォレット残高の描画
+        function renderWallet() {
+            const balanceDisplay = document.getElementById('wallet-balance-display');
+            const walletCard = document.getElementById('wallet-card');
+            const walletStatusMsg = document.getElementById('wallet-status-msg');
+
+            const bal = currentWallet.balance || 0;
+            balanceDisplay.innerText = bal.toLocaleString();
+
+            if (bal < 0) {
+                // 赤字（借金・先払い）状態
+                balanceDisplay.className = "text-4xl font-extrabold tracking-tight text-rose-500";
+                walletCard.className = "bg-rose-50 rounded-3xl p-6 shadow-md border border-rose-100 mb-6 text-center relative overflow-hidden";
+                walletStatusMsg.className = "text-xs text-rose-600 bg-rose-100 py-1.5 px-3 rounded-full inline-block font-medium";
+                walletStatusMsg.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> 貯まる前に買ってしまった状態です！つもり貯金を頑張りましょう`;
+            } else {
+                // 通常・ハッピー状態
+                balanceDisplay.className = "text-4xl font-extrabold tracking-tight text-emerald-600";
+                walletCard.className = "bg-white rounded-3xl p-6 shadow-md border border-slate-100 mb-6 text-center relative overflow-hidden";
+                walletStatusMsg.className = "text-xs text-emerald-600 bg-emerald-50 py-1.5 px-3 rounded-full inline-block font-medium";
+                walletStatusMsg.innerHTML = `<i class="fa-solid fa-circle-check"></i> 達成した資金がここにたまります`;
+            }
+        }
+
+        // ウォレット履歴の描画
+        function renderWalletHistory() {
+            const container = document.getElementById('history-container');
+
+            if (currentExpenses.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-sm bg-white rounded-2xl border border-dashed border-slate-200">
+                        <i class="fa-solid fa-clipboard-list text-3xl mb-2 text-slate-300 block"></i>
+                        ウォレットへの入出金履歴はありません。
+                    </div>
+                `;
+                return;
+            }
+
+            // 日付順に降順でソート (新しい履歴が上)
+            const sorted = [...currentExpenses].sort((a, b) => {
+                return new Date(b.date) - new Date(a.date);
+            });
+
+            let historyHtml = '';
+            sorted.forEach(item => {
+                const isExpense = item.type === 'expense';
+                const badgeClass = isExpense 
+                    ? 'bg-rose-50 text-rose-600 border-rose-100' 
+                    : 'bg-emerald-50 text-emerald-600 border-emerald-100';
+                
+                const sign = isExpense ? '-' : '+';
+                const priceClass = isExpense ? 'text-rose-500 font-bold' : 'text-emerald-500 font-bold';
+                const icon = isExpense ? '<i class="fa-solid fa-cart-shopping"></i>' : '<i class="fa-solid fa-piggy-bank"></i>';
+
+                historyHtml += `
+                    <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex justify-between items-center hover:shadow-md transition-all">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm border ${badgeClass}">
+                                ${icon}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm">${escapeHTML(item.name)}</h4>
+                                <p class="text-[10px] text-slate-400 mt-0.5">${item.date}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="${priceClass} text-sm">${sign}${item.price.toLocaleString()} 円</span>
+                            <button onclick="deleteHistoryItem('${item.id}', ${item.price}, '${item.type}')" class="text-slate-300 hover:text-rose-500 p-1.5 rounded-lg hover:bg-slate-50 transition-colors" title="履歴削除">
+                                <i class="fa-solid fa-xmark text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = historyHtml;
         }
 
         function escapeHTML(str) {
